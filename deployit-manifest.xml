@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<udm.DeploymentPackage version="#$docker-version$#" application="ab-auditservice">
+  <orchestrator>
+    <value>parallel-by-deployment-group</value>
+  </orchestrator>
+  <deployables>
+    <smoketest.HttpRequestTest name="smoke test">
+      <expectedResponseText>{{title}}</expectedResponseText>
+      <url>http://{{BACK_HOST_ADDRESS}}:{{HOST_PORT}}/ab-auditservice/clientService-1.0.0/health</url>
+    </smoketest.HttpRequestTest>
+    <docker.ContainerSpec name="/ab-auditservice">
+      <image>{{REGISTRY_HOST}}/docker-virtual/ab-auditservice:3.1-20172905155714</image>
+      <volumeBindings>
+        <docker.MountedVolumeSpec name="/ab-auditservice/ab-auditservice-config">
+          <volumeName>petclinic-config</volumeName>
+          <mountpoint>/application/properties</mountpoint>
+        </docker.MountedVolumeSpec>
+      </volumeBindings>
+      <restartPolicyName>on-failure</restartPolicyName>
+      <portBindings>
+        <docker.PortSpec name="/ab-auditservice/exposed-port">
+          <containerPort>80</containerPort>
+          <hostPort>{{HOST_PORT}}</hostPort>
+        </docker.PortSpec>
+      </portBindings>
+      <restartPolicyMaximumRetryCount>3</restartPolicyMaximumRetryCount>
+      <showLogsAfter>10</showLogsAfter>
+       <networks>
+        <value>petnetwork</value>
+      </networks>
+    </docker.ContainerSpec>
+    <docker.NetworkSpec name="/ab-auditservice">
+      <driver>bridge</driver>
+    </docker.NetworkSpec>
+    <docker.Folder name="/ab-auditservice.config" file="/ab-auditservice.config/config">
+      <targetPath>/application/properties</targetPath>
+      <targetContainer>ab-auditservice</targetContainer>
+    </docker.Folder>
+    <smoketest.HttpRequestTest name="smoke test - ha">
+      <expectedResponseText>{{title}}</expectedResponseText>
+      <url>http://{{FRONT_HOST_ADDRESS}}/ab-auditservice/</url>
+    </smoketest.HttpRequestTest>
+  </deployables>
+</udm.DeploymentPackage>
